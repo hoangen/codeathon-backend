@@ -250,7 +250,7 @@ def predict_file(file):
     print("file path: " + file)
     model = build_estimator('/tmp/census_model', 'deep')
     y = model.predict(input_fn=lambda: input_fn(file, 1, False, 1))
-    return str([np.argmax(p['probabilities'], 0) for p in y])
+    return [np.argmax(p['probabilities'], 0) for p in y]
 
 
 if __name__ == '__main__':

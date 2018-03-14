@@ -1,4 +1,5 @@
 import json
+import csv
 import os
 import zipfile
 
@@ -34,7 +35,7 @@ def remove_first_line(filename):
     with open(filename, 'r') as fin:
         data = fin.read().splitlines(True)
 
-    with open(filename, 'w') as fout:
+    with open(filename + '1', 'w') as fout:
         fout.writelines(data[1:])
 
 
@@ -67,9 +68,16 @@ def predict_income_file():
         app.logger.debug('File is saved as %s', file_full_path)
         remove_first_line(file_full_path)
 
-        predict_result = predict_file(os.path.abspath(file_full_path))
+        predict_result = predict_file(os.path.abspath(file_full_path + '1'))
 
-        return str(predict_result)
+        with open(file_full_path) as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+
+        for row, result in zip(rows, predict_result):
+            row['fraud'] = result
+
+        return Response(json.dumps(rows), content_type="application/json")
 
     return 'Bad request, no upload file'
 
