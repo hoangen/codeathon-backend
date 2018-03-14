@@ -4,6 +4,7 @@ import os
 import shutil
 import zipfile
 
+from flask_cors import CORS
 from flask import Flask, Response
 from flask import request, send_from_directory
 
@@ -12,6 +13,7 @@ from .wide_deep.wide_deep import predict as predict_legacy
 from .wide_deep.wide_deep import predict_file as predict_file_legacy
 
 app = Flask(__name__)
+CORS(app)
 app.config['DEBUG'] = True
 app.config['UPLOAD_FOLDER'] = 'upload'
 app.config['MODEL_FILE'] = 'model.zip'
