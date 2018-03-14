@@ -12,6 +12,15 @@ def predict_income():
         predict_json = json.loads(request.data)
         predict_data = [item for item in predict_json]
         predict_result = predict(predict_data)
+
         return str(predict_result)
 
     return 'Bad request'
+
+
+@app.route('/model/upload', methods=['POST'])
+def model_upload():
+    if 'file' not in request.files:
+        return 'No File'
+
+    return 'TODO'
