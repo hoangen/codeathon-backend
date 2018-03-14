@@ -24,6 +24,7 @@ import itertools
 
 import numpy as np
 import tensorflow as tf
+import os
 
 _CSV_COLUMNS = [
     'Time',
@@ -49,15 +50,11 @@ _CSV_COLUMN_DEFAULTS = [[0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    '--model_dir', type=str, default='/tmp/laundry_model',
-    help='Base directory for the model.')
-
-parser.add_argument(
     '--model_type', type=str, default='wide_deep',
     help="Valid model types: {'wide', 'deep', 'wide_deep'}.")
 
 parser.add_argument(
-    '--train_epochs', type=int, default=10, help='Number of training epochs.')
+    '--train_epochs', type=int, default=2, help='Number of training epochs.')
 
 parser.add_argument(
     '--epochs_per_eval', type=int, default=2,
@@ -67,17 +64,21 @@ parser.add_argument(
     '--batch_size', type=int, default=40, help='Number of examples per batch.')
 
 parser.add_argument(
-    '--train_data', type=str, default='/tmp/laundry_data/laundry.data',
+    '--train_data', type=str, default='/tmp/laundry_data/laundry.train1',
     help='Path to the training data.')
 
 parser.add_argument(
-    '--test_data', type=str, default='/tmp/laundry_data/laundry.test',
+    '--test_data', type=str, default='/tmp/laundry_data/laundry.test1',
     help='Path to the test data.')
 
 _NUM_EXAMPLES = {
     'train': 32561,
     'validation': 16281,
 }
+
+
+def root_dir():
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), '../upload')
 
 
 def build_model_columns():
@@ -105,6 +106,7 @@ def build_estimator(model_dir, model_type):
     elif model_type == 'deep':
         return tf.estimator.DNNClassifier(
             model_dir=model_dir,
+            optimizer=tf.train.AdamOptimizer(learning_rate=0.005),
             feature_columns=columns,
             hidden_units=hidden_units,
             config=run_config)
@@ -148,8 +150,8 @@ def input_fn(data_file, num_epochs, shuffle, batch_size):
 
 def main(unused_argv):
     # Clean up the model directory if present
-    shutil.rmtree(FLAGS.model_dir, ignore_errors=True)
-    model = build_estimator(FLAGS.model_dir, FLAGS.model_type)
+    shutil.rmtree(root_dir(), ignore_errors=True)
+    model = build_estimator(root_dir(), FLAGS.model_type)
 
     # Train and evaluate the model every `FLAGS.epochs_per_eval` epochs.
     for n in range(FLAGS.train_epochs // FLAGS.epochs_per_eval):
@@ -169,19 +171,30 @@ def main(unused_argv):
 
 def predict(predict_data):
     print(type(predict_data))
-    model = build_estimator('/tmp/laundry_model', 'deep')
-    predict_data = [np.asarray(item) for item in predict_data]
-    features_predict = dict(zip(_CSV_COLUMNS_PREDICT, predict_data))
+    predict_length = len(predict_data)
+    print("predict data length: " + str(predict_length))
+    model = build_estimator(root_dir(), 'wide')
+    zip_data = zip(*predict_data)
+    zip_data = [np.asarray(item) for item in zip_data]
+    features_predict = dict(zip(_CSV_COLUMNS_PREDICT, zip_data))
+    print("type of feature " + str(type(features_predict)))
     input_fn_predict = tf.estimator.inputs.numpy_input_fn(
         x=features_predict,
         y=None,
         shuffle=True
     )
     y = model.predict(input_fn=input_fn_predict)
-    probabilities = list(p['probabilities'] for p in itertools.islice(y, 1))
+    probabilities = list(p['probabilities'] for p in itertools.islice(y, len(predict_data)))
     print("Predictions: {}".format(str(probabilities)))
     print(type(probabilities))
-    return probabilities[0].tolist()
+    return np.asarray(probabilities)
+
+
+def predict_file(cvs_file):
+    print("file path: " + cvs_file)
+    model = build_estimator(root_dir(), 'wide')
+    y = model.predict(input_fn=lambda: input_fn(cvs_file, 1, False, 1))
+    return [np.argmax(p['probabilities'], 0) for p in y]
 
 
 if __name__ == '__main__':
