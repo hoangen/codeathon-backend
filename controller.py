@@ -4,6 +4,7 @@ import os
 import shutil
 import zipfile
 
+from operator import itemgetter
 from flask_cors import CORS
 from flask import Flask, Response
 from flask import request, send_from_directory
@@ -82,7 +83,8 @@ def predict_income_file():
         for row, result in zip(rows, predict_result):
             row['Suspicious'] = result
 
-        return Response(json.dumps(rows), content_type="application/json")
+        sorted_rows = sorted(rows, key=itemgetter('Suspicious'), reverse=True)
+        return Response(json.dumps(sorted_rows), content_type="application/json")
 
     return 'Bad request, no upload file'
 
@@ -125,7 +127,8 @@ def predict_laundry_file():
         for row, result in zip(rows, predict_result):
             row['Suspicious'] = result.item()
 
-        return Response(json.dumps(rows), content_type="application/json")
+        sorted_rows = sorted(rows, key=itemgetter('Suspicious'), reverse=True)
+        return Response(json.dumps(sorted_rows), content_type="application/json")
 
     return 'Bad request, no upload file'
 
