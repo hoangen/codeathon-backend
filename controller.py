@@ -42,7 +42,7 @@ def remove_first_line(filename):
         fout.writelines(data[1:])
 
 
-@app.route('/predict', methods=['POST'])
+@app.route('/predict_legacy', methods=['POST'])
 def predict_income():
     if request.method == 'POST':
         predict_json = json.loads(request.data)
@@ -54,7 +54,7 @@ def predict_income():
     return 'Bad request'
 
 
-@app.route('/predict/file', methods=['POST'])
+@app.route('/predict/file_legacy', methods=['POST'])
 def predict_income_file():
     if 'file' not in request.files:
         return 'No File'
@@ -85,7 +85,7 @@ def predict_income_file():
     return 'Bad request, no upload file'
 
 
-@app.route('/predict2', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 def predict_laundry():
     if request.method == 'POST':
         predict_json = json.loads(request.data)
@@ -97,7 +97,7 @@ def predict_laundry():
     return 'Bad request'
 
 
-@app.route('/predict/file2', methods=['POST'])
+@app.route('/predict/file', methods=['POST'])
 def predict_laundry_file():
     if 'file' not in request.files:
         return 'No File'
