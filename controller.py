@@ -1,6 +1,7 @@
 import json
 import csv
 import os
+import shutil
 import zipfile
 
 from flask import Flask, Response
@@ -132,6 +133,8 @@ def model_upload():
     print request.files
     if 'file' not in request.files:
         return 'No File'
+
+    shutil.rmtree(app.config['UPLOAD_FOLDER'], ignore_errors=True)
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
