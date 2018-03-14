@@ -28,4 +28,4 @@ $ FLASK_APP=controller.py flask run --port=5001 --host=0.0.0.0
 
 ## Alternatively, you can run from a pre-built docker image
 
-[How to run Alliance Server from a pre-build docker image](https://github.com/hoangen/codeathon-backend/wiki/How-to-Run-Alliance-Server-from-a-Pre-built-Docker-Image)
+[How to run Alliance Server from a pre-built docker image](https://github.com/hoangen/codeathon-backend/wiki/How-to-Run-Alliance-Server-from-a-Pre-built-Docker-Image)
