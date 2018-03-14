@@ -194,7 +194,7 @@ def predict_file(cvs_file):
     print("file path: " + cvs_file)
     model = build_estimator(root_dir(), 'wide')
     y = model.predict(input_fn=lambda: input_fn(cvs_file, 1, False, 1))
-    return [np.argmax(p['probabilities'], 0) for p in y]
+    return [p['probabilities'][1] for p in y]
 
 
 if __name__ == '__main__':

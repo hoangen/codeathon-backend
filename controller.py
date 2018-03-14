@@ -117,13 +117,13 @@ def predict_laundry_file():
         remove_first_line(file_full_path)
 
         predict_result = predict_file(os.path.abspath(file_full_path + '1'))
-
+        print(type(predict_result))
         with open(file_full_path) as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
         for row, result in zip(rows, predict_result):
-            row['fraud'] = result
+            row['fraud'] = result.item()
 
         return Response(json.dumps(rows), content_type="application/json")
 
