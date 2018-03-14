@@ -80,7 +80,7 @@ def predict_income_file():
             rows = list(reader)
 
         for row, result in zip(rows, predict_result):
-            row['fraud'] = result
+            row['Suspicious'] = result
 
         return Response(json.dumps(rows), content_type="application/json")
 
@@ -123,7 +123,7 @@ def predict_laundry_file():
             rows = list(reader)
 
         for row, result in zip(rows, predict_result):
-            row['fraud'] = result.item()
+            row['Suspicious'] = result.item()
 
         return Response(json.dumps(rows), content_type="application/json")
 
