@@ -1,4 +1,5 @@
 import json
+import csv
 import os
 import zipfile
 from flask import Flask
@@ -21,6 +22,36 @@ def predict_income():
         return str(predict_result)
 
     return 'Bad request'
+
+
+@app.route('/predict/file', methods=['POST'])
+def predict_income_file():
+
+    if 'file' not in request.files:
+        return 'No File'
+
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+
+    uploaded_file = request.files['file']
+    if uploaded_file:
+        filename = uploaded_file.filename
+        file_full_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        uploaded_file.save(file_full_path)
+
+        app.logger.debug('File is saved as %s', file_full_path)
+
+        rows = list(csv.reader(open(file_full_path)))
+
+        rows_string = json.dumps(rows)
+        app.logger.debug(rows_string)
+        predict_json = json.loads(rows_string)
+        predict_data = [item for item in predict_json]
+        predict_result = predict(predict_data)
+
+        return str(predict_result)
+
+    return 'Bad request, no upload file'
 
 
 @app.route('/model/upload', methods=['POST'])
