@@ -30,6 +30,14 @@ def get_file(filename):  # pragma: no cover
         return str(exc)
 
 
+def remove_first_line(filename):
+    with open(filename, 'r') as fin:
+        data = fin.read().splitlines(True)
+
+    with open(filename, 'w') as fout:
+        fout.writelines(data[1:])
+
+
 @app.route('/predict', methods=['POST'])
 def predict_income():
     if request.method == 'POST':
@@ -57,6 +65,7 @@ def predict_income_file():
         uploaded_file.save(file_full_path)
 
         app.logger.debug('File is saved as %s', file_full_path)
+        remove_first_line(file_full_path)
 
         predict_result = predict_file(os.path.abspath(file_full_path))
 
