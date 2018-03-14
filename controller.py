@@ -2,7 +2,7 @@ import json
 import os
 import zipfile
 
-from flask import Flask
+from flask import Flask, Response
 from flask import request, send_from_directory
 
 from .wide_deep.wide_deep import predict, predict_file
@@ -11,6 +11,23 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['UPLOAD_FOLDER'] = 'upload'
 app.config['MODEL_FILE'] = 'model.zip'
+
+
+def root_dir():
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), app.config['UPLOAD_FOLDER'])
+
+
+def get_file(filename):  # pragma: no cover
+    try:
+        src = os.path.join(root_dir(), filename)
+        # Figure out how flask returns static files
+        # Tried:
+        # - render_template
+        # - send_file
+        # This should not be so non-obvious
+        return open(src).read()
+    except IOError as exc:
+        return str(exc)
 
 
 @app.route('/predict', methods=['POST'])
@@ -80,3 +97,11 @@ def model_download():
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                app.config['MODEL_FILE'],
                                mimetype='application/octet-stream')
+
+
+@app.route('/model/download/<filename>', methods=['GET'])
+def model_download_file(filename):
+    app.logger.debug('Filename is %s', filename)
+
+    content = get_file(filename)
+    return Response(content, mimetype="application/zip")
