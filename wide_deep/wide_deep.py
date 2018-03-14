@@ -21,6 +21,7 @@ import argparse
 import shutil
 import sys
 import itertools
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -73,6 +74,10 @@ _NUM_EXAMPLES = {
     'train': 32561,
     'validation': 16281,
 }
+
+
+def root_dir():
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), '../upload')
 
 
 def build_model_columns():
@@ -229,7 +234,7 @@ def predict(predict_data):
     print(type(predict_data))
     predict_length = len(predict_data)
     print("predict data length: " + str(predict_length))
-    model = build_estimator('/tmp/census_model', 'deep')
+    model = build_estimator(root_dir(), 'deep')
     zip_data = zip(*predict_data)
     zip_data = [np.asarray(item) for item in zip_data]
     features_predict = dict(zip(_CSV_COLUMNS_PREDICT, zip_data))
@@ -248,7 +253,7 @@ def predict(predict_data):
 
 def predict_file(file):
     print("file path: " + file)
-    model = build_estimator('/tmp/census_model', 'deep')
+    model = build_estimator(root_dir(), 'deep')
     y = model.predict(input_fn=lambda: input_fn(file, 1, False, 1))
     return [np.argmax(p['probabilities'], 0) for p in y]
 
