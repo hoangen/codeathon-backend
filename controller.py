@@ -1,10 +1,11 @@
 import json
-import csv
 import os
 import zipfile
+
 from flask import Flask
 from flask import request, send_from_directory
-from wide_deep.wide_deep import predict
+
+from .wide_deep.wide_deep import predict, predict_file
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -26,7 +27,6 @@ def predict_income():
 
 @app.route('/predict/file', methods=['POST'])
 def predict_income_file():
-
     if 'file' not in request.files:
         return 'No File'
 
@@ -41,13 +41,7 @@ def predict_income_file():
 
         app.logger.debug('File is saved as %s', file_full_path)
 
-        rows = list(csv.reader(open(file_full_path)))
-
-        rows_string = json.dumps(rows)
-        app.logger.debug(rows_string)
-        predict_json = json.loads(rows_string)
-        predict_data = [item for item in predict_json]
-        predict_result = predict(predict_data)
+        predict_result = predict_file(os.path.abspath(file_full_path))
 
         return str(predict_result)
 

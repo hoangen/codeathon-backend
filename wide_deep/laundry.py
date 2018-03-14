@@ -26,25 +26,30 @@ import numpy as np
 import tensorflow as tf
 
 _CSV_COLUMNS = [
-    'age', 'workclass', 'fnlwgt', 'education', 'education_num',
-    'marital_status', 'occupation', 'relationship', 'race', 'gender',
-    'capital_gain', 'capital_loss', 'hours_per_week', 'native_country',
-    'income_bracket'
+    'Time',
+    'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
+    'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20',
+    'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28',
+    'Amount', 'Class'
 ]
 
 _CSV_COLUMNS_PREDICT = [
-    'age', 'workclass', 'fnlwgt', 'education', 'education_num',
-    'marital_status', 'occupation', 'relationship', 'race', 'gender',
-    'capital_gain', 'capital_loss', 'hours_per_week', 'native_country'
+    'Time',
+    'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
+    'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20',
+    'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28',
+    'Amount'
 ]
 
-_CSV_COLUMN_DEFAULTS = [[0], [''], [0], [''], [0], [''], [''], [''], [''], [''],
-                        [0], [0], [0], [''], ['']]
+_CSV_COLUMN_DEFAULTS = [[0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
+                        [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
+                        [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.], [0.],
+                        [0.]]
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
-    '--model_dir', type=str, default='/tmp/census_model',
+    '--model_dir', type=str, default='/tmp/laundry_model',
     help='Base directory for the model.')
 
 parser.add_argument(
@@ -52,7 +57,7 @@ parser.add_argument(
     help="Valid model types: {'wide', 'deep', 'wide_deep'}.")
 
 parser.add_argument(
-    '--train_epochs', type=int, default=40, help='Number of training epochs.')
+    '--train_epochs', type=int, default=10, help='Number of training epochs.')
 
 parser.add_argument(
     '--epochs_per_eval', type=int, default=2,
@@ -62,11 +67,11 @@ parser.add_argument(
     '--batch_size', type=int, default=40, help='Number of examples per batch.')
 
 parser.add_argument(
-    '--train_data', type=str, default='/tmp/census_data/adult.data',
+    '--train_data', type=str, default='/tmp/laundry_data/laundry.data',
     help='Path to the training data.')
 
 parser.add_argument(
-    '--test_data', type=str, default='/tmp/census_data/adult.test',
+    '--test_data', type=str, default='/tmp/laundry_data/laundry.test',
     help='Path to the test data.')
 
 _NUM_EXAMPLES = {
@@ -76,78 +81,15 @@ _NUM_EXAMPLES = {
 
 
 def build_model_columns():
-    """Builds a set of wide and deep feature columns."""
-    # Continuous columns
-    age = tf.feature_column.numeric_column('age')
-    education_num = tf.feature_column.numeric_column('education_num')
-    capital_gain = tf.feature_column.numeric_column('capital_gain')
-    capital_loss = tf.feature_column.numeric_column('capital_loss')
-    hours_per_week = tf.feature_column.numeric_column('hours_per_week')
-
-    education = tf.feature_column.categorical_column_with_vocabulary_list(
-        'education', [
-            'Bachelors', 'HS-grad', '11th', 'Masters', '9th', 'Some-college',
-            'Assoc-acdm', 'Assoc-voc', '7th-8th', 'Doctorate', 'Prof-school',
-            '5th-6th', '10th', '1st-4th', 'Preschool', '12th'])
-
-    marital_status = tf.feature_column.categorical_column_with_vocabulary_list(
-        'marital_status', [
-            'Married-civ-spouse', 'Divorced', 'Married-spouse-absent',
-            'Never-married', 'Separated', 'Married-AF-spouse', 'Widowed'])
-
-    relationship = tf.feature_column.categorical_column_with_vocabulary_list(
-        'relationship', [
-            'Husband', 'Not-in-family', 'Wife', 'Own-child', 'Unmarried',
-            'Other-relative'])
-
-    workclass = tf.feature_column.categorical_column_with_vocabulary_list(
-        'workclass', [
-            'Self-emp-not-inc', 'Private', 'State-gov', 'Federal-gov',
-            'Local-gov', '?', 'Self-emp-inc', 'Without-pay', 'Never-worked'])
-
-    # To show an example of hashing:
-    occupation = tf.feature_column.categorical_column_with_hash_bucket(
-        'occupation', hash_bucket_size=1000)
-
-    # Transformations.
-    age_buckets = tf.feature_column.bucketized_column(
-        age, boundaries=[18, 25, 30, 35, 40, 45, 50, 55, 60, 65])
-
-    # Wide columns and deep columns.
-    base_columns = [
-        education, marital_status, relationship, workclass, occupation,
-        age_buckets,
-    ]
-
-    crossed_columns = [
-        tf.feature_column.crossed_column(
-            ['education', 'occupation'], hash_bucket_size=1000),
-        tf.feature_column.crossed_column(
-            [age_buckets, 'education', 'occupation'], hash_bucket_size=1000),
-    ]
-
-    wide_columns = base_columns + crossed_columns
-
-    deep_columns = [
-        age,
-        education_num,
-        capital_gain,
-        capital_loss,
-        hours_per_week,
-        tf.feature_column.indicator_column(workclass),
-        tf.feature_column.indicator_column(education),
-        tf.feature_column.indicator_column(marital_status),
-        tf.feature_column.indicator_column(relationship),
-        # To show an example of embedding
-        tf.feature_column.embedding_column(occupation, dimension=8),
-    ]
-
-    return wide_columns, deep_columns
+    time = [tf.feature_column.numeric_column('Time')]
+    v1_28 = [tf.feature_column.numeric_column("V" + str(i)) for i in range(1, 29)]
+    amount = [tf.feature_column.numeric_column('Amount')]
+    return time + v1_28 + amount
 
 
 def build_estimator(model_dir, model_type):
     """Build an estimator appropriate for the given model type."""
-    wide_columns, deep_columns = build_model_columns()
+    columns = build_model_columns()
     hidden_units = [100, 75, 50, 25]
 
     # Create a tf.estimator.RunConfig to ensure the model is run on CPU, which
@@ -158,19 +100,19 @@ def build_estimator(model_dir, model_type):
     if model_type == 'wide':
         return tf.estimator.LinearClassifier(
             model_dir=model_dir,
-            feature_columns=wide_columns,
+            feature_columns=columns,
             config=run_config)
     elif model_type == 'deep':
         return tf.estimator.DNNClassifier(
             model_dir=model_dir,
-            feature_columns=deep_columns,
+            feature_columns=columns,
             hidden_units=hidden_units,
             config=run_config)
     else:
         return tf.estimator.DNNLinearCombinedClassifier(
             model_dir=model_dir,
-            linear_feature_columns=wide_columns,
-            dnn_feature_columns=deep_columns,
+            linear_feature_columns=columns,
+            dnn_feature_columns=columns,
             dnn_hidden_units=hidden_units,
             config=run_config)
 
@@ -185,8 +127,8 @@ def input_fn(data_file, num_epochs, shuffle, batch_size):
         print('Parsing value', value)
         columns = tf.decode_csv(value, record_defaults=_CSV_COLUMN_DEFAULTS)
         features = dict(zip(_CSV_COLUMNS, columns))
-        labels = features.pop('income_bracket')
-        return features, tf.equal(labels, '>50K')
+        labels = features.pop('Class')
+        return features, labels
 
     # Extract lines from input files using the Dataset API.
     dataset = tf.data.TextLineDataset(data_file)
@@ -227,30 +169,19 @@ def main(unused_argv):
 
 def predict(predict_data):
     print(type(predict_data))
-    predict_length = len(predict_data)
-    print("predict data length: " + str(predict_length))
-    model = build_estimator('/tmp/census_model', 'deep')
-    zip_data = zip(*predict_data)
-    zip_data = [np.asarray(item) for item in zip_data]
-    features_predict = dict(zip(_CSV_COLUMNS_PREDICT, zip_data))
-    print("type of feature " + str(type(features_predict)))
+    model = build_estimator('/tmp/laundry_model', 'deep')
+    predict_data = [np.asarray(item) for item in predict_data]
+    features_predict = dict(zip(_CSV_COLUMNS_PREDICT, predict_data))
     input_fn_predict = tf.estimator.inputs.numpy_input_fn(
         x=features_predict,
         y=None,
         shuffle=True
     )
     y = model.predict(input_fn=input_fn_predict)
-    probabilities = list(p['probabilities'] for p in itertools.islice(y, len(predict_data)))
+    probabilities = list(p['probabilities'] for p in itertools.islice(y, 1))
     print("Predictions: {}".format(str(probabilities)))
     print(type(probabilities))
-    return np.asarray(probabilities)
-
-
-def predict_file(file):
-    print("file path: " + file)
-    model = build_estimator('/tmp/census_model', 'deep')
-    y = model.predict(input_fn=lambda: input_fn(file, 1, False, 1))
-    return np.asarray([p['probabilities'] for p in y])
+    return probabilities[0].tolist()
 
 
 if __name__ == '__main__':
