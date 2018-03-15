@@ -11,6 +11,10 @@ $ sudo pip install tensorflow
 $ sudo pip install Flask
 ```
 
+```
+$ sudo pip install flask_cors
+```
+
 ## Installation Instruction
 ### Check-out the source code
 ```
