@@ -26,8 +26,10 @@ def root_dir():
 
 def get_file(filename):  # pragma: no cover
     src = os.path.join(root_dir(), filename)
-    with open(src).read() as file_content:
-        return file_content
+    with open(src) as file_model:
+        content = file_model.read()
+        file_model.close()
+    return content
 
 
 def remove_first_line(filename):
