@@ -25,16 +25,9 @@ def root_dir():
 
 
 def get_file(filename):  # pragma: no cover
-    try:
-        src = os.path.join(root_dir(), filename)
-        # Figure out how flask returns static files
-        # Tried:
-        # - render_template
-        # - send_file
-        # This should not be so non-obvious
-        return open(src).read()
-    except IOError as exc:
-        return str(exc)
+    src = os.path.join(root_dir(), filename)
+    with open(src).read() as file_content:
+        return file_content
 
 
 def remove_first_line(filename):
@@ -135,7 +128,8 @@ def predict_laundry_file():
 
 @app.route('/model/upload', methods=['POST'])
 def model_upload():
-    print request.files
+    print
+    request.files
     if 'file' not in request.files:
         return 'No File'
 
