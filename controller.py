@@ -81,9 +81,9 @@ def predict_income_file():
             rows = list(reader)
 
         for row, result in zip(rows, predict_result):
-            row['Suspicious'] = result
+            row['AI Suspicion Score'] = result
 
-        sorted_rows = sorted(rows, key=itemgetter('Suspicious'), reverse=True)
+        sorted_rows = sorted(rows, key=itemgetter('AI Suspicion Score'), reverse=True)
         return Response(json.dumps(sorted_rows), content_type="application/json")
 
     return 'Bad request, no upload file'
@@ -125,9 +125,9 @@ def predict_laundry_file():
             rows = list(reader)
 
         for row, result in zip(rows, predict_result):
-            row['Suspicious'] = result.item()
+            row['AI Suspicion Score'] = result.item()
 
-        sorted_rows = sorted(rows, key=itemgetter('Suspicious'), reverse=True)
+        sorted_rows = sorted(rows, key=itemgetter('AI Suspicion Score'), reverse=True)
         return Response(json.dumps(sorted_rows), content_type="application/json")
 
     return 'Bad request, no upload file'
